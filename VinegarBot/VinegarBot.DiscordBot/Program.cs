@@ -8,6 +8,7 @@ using Serilog;
 using VinegarBot.DiscordBot;
 using VinegarBot.DiscordBot.Autocomplete;
 using VinegarBot.DiscordBot.Commands;
+using VinegarBot.DiscordBot.Services;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
@@ -41,7 +42,8 @@ IHost host = Host.CreateDefaultBuilder(args)
                 .WithCommandGroup<UserCommands>()
                 .WithCommandGroup<LevelCommands>()
                 .Finish()
-            .AddAutocompleteProvider<LevelsOptionsAutocompleteProvider>();
+            .AddAutocompleteProvider<LevelsOptionsAutocompleteProvider>()
+            .AddTransient<IUserLevelService, UserLevelService>();
 
         foreach (var type in responderTypes)
         {
