@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VinegarBot.DiscordBot", "VinegarBot.DiscordBot\VinegarBot.DiscordBot.csproj", "{BC0E7F6A-C59B-4A7B-822F-8225F7F3FD30}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{166CCA02-1BAC-4ADC-8D26-70F2E10E47D8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BC0E7F6A-C59B-4A7B-822F-8225F7F3FD30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC0E7F6A-C59B-4A7B-822F-8225F7F3FD30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC0E7F6A-C59B-4A7B-822F-8225F7F3FD30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC0E7F6A-C59B-4A7B-822F-8225F7F3FD30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{166CCA02-1BAC-4ADC-8D26-70F2E10E47D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{166CCA02-1BAC-4ADC-8D26-70F2E10E47D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{166CCA02-1BAC-4ADC-8D26-70F2E10E47D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{166CCA02-1BAC-4ADC-8D26-70F2E10E47D8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {137E0604-3895-428D-8F1F-7975135628E9}
+	EndGlobalSection
+EndGlobal

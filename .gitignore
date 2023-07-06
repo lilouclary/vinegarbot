@@ -1,0 +1,7 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/VinegarBot/VinegarBot/appsettings.json
+/VinegarBot/VinegarBot.DiscordBot/appsettings.json
+/VinegarBot/VinegarBot.DiscordBot/appsettings.Development.json
