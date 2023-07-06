@@ -26,7 +26,7 @@ namespace VinegarBot.DiscordBot.Commands
             this.feedbackService = feedbackService;
         }
 
-        [Command("GetUserLevel")]
+        [Command("getuserlevel")]
         [CommandType(ApplicationCommandType.User)]
         public async Task<IResult> GetUserLevelAsync(IUser user)
         {
@@ -47,17 +47,29 @@ namespace VinegarBot.DiscordBot.Commands
                 : Result.FromError(reply);
         }
 
-        [Command("givepoints")]
+        [Command("updatepoints")]
         [CommandType(ApplicationCommandType.ChatInput)]
         [Description("Give points to specified user.")]
-        public async Task<IResult> GivePointsAsync(IUser user, [Description("Enter an integer.")] int points)
+        [DiscordDefaultMemberPermissions(DiscordPermission.ModerateMembers)]
+        public async Task<IResult> GivePointsAsync(
+            IUser user, 
+            [AutocompleteProvider("autocomplete::leveloptions"), Description("What kind of modification? (Add or Subtract)")] string action, 
+            [Description("Enter an integer.")] int points)
         {
+            var replyText = $"Added {points} points to {user.Username}.";
+
+            if (action == "subtract")
+            {
+                points = points * -1;
+                replyText = $"Subtracted {Math.Abs(points)} points from {user.Username}.";
+            }
+
             ClaryUser claryUser = GetUser(user.Username);
             claryUser.UserPoints += points;
 
             ModifyUserPoints(user.Username, points);
 
-            var reply = await feedbackService.SendContextualInfoAsync($"Gave {user.Username} {points} points.");
+            var reply = await feedbackService.SendContextualInfoAsync(replyText);
 
             return reply.IsSuccess
                 ? Result.FromSuccess()

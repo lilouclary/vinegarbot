@@ -6,6 +6,7 @@ using Remora.Discord.Hosting.Extensions;
 using Remora.Rest.Core;
 using Serilog;
 using VinegarBot.DiscordBot;
+using VinegarBot.DiscordBot.Autocomplete;
 using VinegarBot.DiscordBot.Commands;
 
 var configuration = new ConfigurationBuilder()
@@ -37,9 +38,10 @@ IHost host = Host.CreateDefaultBuilder(args)
         services
             .AddDiscordCommands(true)
             .AddCommandTree()
-            .WithCommandGroup<UserCommands>()
-            .WithCommandGroup<LevelCommands>()
-            .Finish();
+                .WithCommandGroup<UserCommands>()
+                .WithCommandGroup<LevelCommands>()
+                .Finish()
+            .AddAutocompleteProvider<LevelsOptionsAutocompleteProvider>();
 
         foreach (var type in responderTypes)
         {
