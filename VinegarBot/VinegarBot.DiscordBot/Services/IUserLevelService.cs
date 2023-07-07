@@ -17,5 +17,6 @@ namespace VinegarBot.DiscordBot.Services
         public void ModifyUserPoints(IUser _user, int points);
         public int DeterminePostXP();
         public bool CheckMessageInterval(IUser _user, DateTimeOffset eventDateTime);
+        public int CheckUserLevelUp(IUser _user);
     }
 }
