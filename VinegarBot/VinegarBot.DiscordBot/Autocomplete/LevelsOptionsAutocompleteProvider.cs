@@ -3,12 +3,6 @@ using Humanizer;
 using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Objects;
 using Remora.Discord.Commands.Autocomplete;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VinegarBot.DiscordBot.Autocomplete
 {
