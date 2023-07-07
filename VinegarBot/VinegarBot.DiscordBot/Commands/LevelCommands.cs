@@ -31,7 +31,6 @@ namespace VinegarBot.DiscordBot.Commands
 
         [Command("checklevel")]
         [CommandType(ApplicationCommandType.User)]
-        [DiscordDefaultMemberPermissions(DiscordPermission.SendMessages)]
         public async Task<IResult> GetUserLevelAsync(IUser user)
         {
             var username = user.Username;
@@ -53,7 +52,7 @@ namespace VinegarBot.DiscordBot.Commands
         [Command("updatepoints")]
         [CommandType(ApplicationCommandType.ChatInput)]
         [Description("Give points to specified user.")]
-        //[DiscordDefaultMemberPermissions(DiscordPermission.ModerateMembers)]
+        [DiscordDefaultMemberPermissions(DiscordPermission.ModerateMembers)]
         public async Task<IResult> GivePointsAsync(
             IUser user, 
             [AutocompleteProvider("autocomplete::leveloptions"), Description("What kind of modification? (Add or Subtract)")] string action, 

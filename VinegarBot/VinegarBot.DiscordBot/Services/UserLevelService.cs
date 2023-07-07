@@ -3,6 +3,8 @@ using CsvHelper;
 using System.Globalization;
 using VinegarBot.DiscordBot.Models;
 using Remora.Discord.API.Abstractions.Objects;
+using Remora.Discord.API.Abstractions.Gateway.Events;
+using Remora.Discord.API.Objects;
 
 namespace VinegarBot.DiscordBot.Services
 {
@@ -70,44 +72,6 @@ namespace VinegarBot.DiscordBot.Services
             return newUser;
         }
 
-        public void ModifyUserPoints(IUser _user, int points)
-        {
-            List<ClaryUser> users = new List<ClaryUser>();
-
-            if (!CheckIfUserExists(_user))
-            {
-                AddUser(_user);
-            }
-
-            // read file into enumerable and update points for user
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = false,
-            };
-            using (var reader = new StreamReader("UserInfo.csv"))
-            using (var csv = new CsvReader(reader, config))
-            {
-                List<ClaryUser> records = csv.GetRecords<ClaryUser>().ToList();
-
-                foreach (var record in records)
-                {
-                    if (record.UserName == _user.Username)
-                    {
-                        record.UserPoints += points;
-                    }
-                }
-
-                users = records;
-            }
-
-            // overwrite the old file with the new data
-            using (var writer = new StreamWriter("UserInfo.csv", false))
-            using (var csv = new CsvWriter(writer, config))
-            {
-                csv.WriteRecords(users);
-            }
-        }
-
         public bool CheckIfUserExists(IUser _user)
         {
             try
@@ -163,6 +127,97 @@ namespace VinegarBot.DiscordBot.Services
             }
 
             return users;
+        }
+
+        public void ModifyUserPoints(IUser _user, int points)
+        {
+            List<ClaryUser> users = new List<ClaryUser>();
+
+            if (!CheckIfUserExists(_user))
+            {
+                AddUser(_user);
+            }
+
+            // read file into enumerable and update points for user
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = false,
+            };
+            using (var reader = new StreamReader("UserInfo.csv"))
+            using (var csv = new CsvReader(reader, config))
+            {
+                List<ClaryUser> records = csv.GetRecords<ClaryUser>().ToList();
+
+                foreach (var record in records)
+                {
+                    if (record.UserName == _user.Username)
+                    {
+                        record.UserPoints += points;
+                    }
+                }
+
+                users = records;
+            }
+
+            // overwrite the old file with the new data
+            using (var writer = new StreamWriter("UserInfo.csv", false))
+            using (var csv = new CsvWriter(writer, config))
+            {
+                csv.WriteRecords(users);
+            }
+        }
+
+        public int DeterminePostXP()
+        {
+            Random random = new Random();
+            int XP = random.Next(15, 25);
+
+            return XP;
+        }
+
+        public bool CheckMessageInterval(IUser _user, DateTimeOffset eventDateTime)
+        {
+            ClaryUser user = GetUser(_user);
+            List<ClaryUser> users = new List<ClaryUser>();
+
+            TimeSpan offset = eventDateTime - user.LastMessageDateTime;
+
+            if(offset.TotalSeconds < 60)
+            {
+                return false;
+            }
+            else
+            {
+                // update the timestamp for the user if they can be awarded points
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = false,
+                };
+                using (var reader = new StreamReader("UserInfo.csv"))
+                using (var csv = new CsvReader(reader, config))
+                {
+                    List<ClaryUser> records = csv.GetRecords<ClaryUser>().ToList();
+
+                    foreach (var record in records)
+                    {
+                        if (record.UserName == _user.Username)
+                        {
+                            record.LastMessageDateTime = eventDateTime;
+                        }
+                    }
+
+                    users = records;
+                }
+
+                // overwrite the old file with the new data
+                using (var writer = new StreamWriter("UserInfo.csv", false))
+                using (var csv = new CsvWriter(writer, config))
+                {
+                    csv.WriteRecords(users);
+                }
+
+                return true;
+            }
         }
     }
 }

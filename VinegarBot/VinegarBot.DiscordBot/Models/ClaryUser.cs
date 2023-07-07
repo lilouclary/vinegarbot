@@ -13,5 +13,6 @@ namespace VinegarBot.DiscordBot.Models
         public required Snowflake UserID { get; set; }
         public int UserPoints { get; set; } = 0;
         public int UserLevel { get; set; } = 0;
+        public DateTimeOffset LastMessageDateTime { get; set; } = DateTimeOffset.MinValue;
     }
 }
