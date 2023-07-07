@@ -1,17 +1,18 @@
-﻿using CsvHelper;
-using CsvHelper.Configuration;
-using Remora.Commands.Attributes;
+﻿using Remora.Commands.Attributes;
 using Remora.Commands.Groups;
 using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Objects;
 using Remora.Discord.Commands.Attributes;
 using Remora.Discord.Commands.Feedback.Services;
+using Remora.Discord.Extensions.Embeds;
+using Remora.Discord.Pagination;
+using Remora.Discord.Pagination.Extensions;
 using Remora.Results;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Globalization;
 using VinegarBot.DiscordBot.Models;
+using VinegarBot.DiscordBot.Services;
 
 namespace VinegarBot.DiscordBot.Commands
 {
@@ -19,20 +20,21 @@ namespace VinegarBot.DiscordBot.Commands
     {
         private readonly ILogger<UserCommands> logger;
         private readonly FeedbackService feedbackService;
+        private readonly IUserLevelService userLevelService;
 
-        public LevelCommands(ILogger<UserCommands> logger, FeedbackService feedbackService)
+        public LevelCommands(ILogger<UserCommands> logger, FeedbackService feedbackService, IUserLevelService userLevelService)
         {
             this.logger = logger;
             this.feedbackService = feedbackService;
+            this.userLevelService = userLevelService;
         }
 
-        [Command("getuserlevel")]
+        [Command("checklevel")]
         [CommandType(ApplicationCommandType.User)]
         public async Task<IResult> GetUserLevelAsync(IUser user)
         {
-
             var username = user.Username;
-            ClaryUser claryUser = GetUser(username);
+            ClaryUser claryUser = userLevelService.GetUser(user);
 
             string responseText = $"{username} has {claryUser.UserPoints} points and is level {claryUser.UserLevel}.";
 
@@ -64,10 +66,10 @@ namespace VinegarBot.DiscordBot.Commands
                 replyText = $"Subtracted {Math.Abs(points)} points from {user.Username}.";
             }
 
-            ClaryUser claryUser = GetUser(user.Username);
+            ClaryUser claryUser = userLevelService.GetUser(user);
             claryUser.UserPoints += points;
 
-            ModifyUserPoints(user.Username, points);
+            userLevelService.ModifyUserPoints(user, points);
 
             var reply = await feedbackService.SendContextualInfoAsync(replyText);
 
@@ -76,131 +78,31 @@ namespace VinegarBot.DiscordBot.Commands
                 : Result.FromError(reply);
         }
 
-        private ClaryUser GetUser(string username)
+        [Command("checkleaderboard")]
+        [CommandType(ApplicationCommandType.ChatInput)]
+        [Description("Check the Clary Rewards Program leaderboard.")]
+        public async Task<IResult> CheckLeaderboardAsync()
         {
-            ClaryUser user = null;
-            bool userExists = CheckIfUserExists(username);
+            List<ClaryUser> users = userLevelService.GetUsers();
+            var fields = new List<EmbedField>();
+            int ranking = 1;
 
-            try
+            foreach (var user in users)
             {
-                if (userExists)
-                {
-                    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                    {
-                        HasHeaderRecord = false,
-                    };
-                    using (var reader = new StreamReader("UserInfo.csv"))
-                    using (var csv = new CsvReader(reader, config))
-                    {
-                        var records = csv.GetRecords<ClaryUser>();
-                        // var result = records.Where(user => user.UserName == username);
-                        user = records.Where(user => user.UserName == username).FirstOrDefault();
-                    }
-                }
-                else
-                {
-                    user = AddUser(username);
-                }
-            }
-            catch (Exception ex) 
-            { 
-                Console.WriteLine(ex.Message); 
-            }
-            
-
-            return user;
-        }
-
-        private ClaryUser AddUser(string username)
-        {
-            ClaryUser newUser = new ClaryUser { UserName = username};
-
-            try
-            {
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = false,
-                };
-
-                using (var stream = File.Open("UserInfo.csv", FileMode.Append))
-                using (var writer = new StreamWriter(stream))
-                using (var csv = new CsvWriter(writer, config))
-                {
-                    csv.WriteRecord(newUser);
-                    csv.NextRecord();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
+                fields.Add(new EmbedField("", $"{ranking}. {user.UserName}  {user.UserPoints}xp  lvl{user.UserLevel}"));
+                ranking++;
             }
 
-            return newUser;
-        }
+            //var pages = PaginatedEmbedFactory.SimpleFieldsFromCollection(users, user => user.UserName, user => user.UserPoints.ToString());
 
-        private void ModifyUserPoints(string username, int points)
-        {
-            List<ClaryUser> users = new List<ClaryUser>();
+            var reply = await feedbackService.SendContextualEmbedAsync(new Embed(
+                Title: "Clary Reward's Program Leaderboard",
+                Fields: fields
+                ));
 
-            // read file into enumerable and update points for user
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = false,
-            };
-            using (var reader = new StreamReader("UserInfo.csv"))
-            using (var csv = new CsvReader(reader, config))
-            {
-                List<ClaryUser> records = csv.GetRecords<ClaryUser>().ToList();
-                
-                foreach (var record in records)
-                {
-                    if(record.UserName == username)
-                    {
-                        record.UserPoints += points;
-                    }
-                }
-
-                users = records;
-            }
-
-            // overwrite the old file with the new data
-            using (var writer = new StreamWriter("UserInfo.csv", false))
-            using (var csv = new CsvWriter(writer, config))
-            {
-                csv.WriteRecords(users);
-            }
-        }
-
-        private bool CheckIfUserExists(string username)
-        {
-            try
-            {
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = false,
-                };
-                using (var reader = new StreamReader("UserInfo.csv"))
-                using (var csv = new CsvReader(reader, config))
-                {
-                    var records = csv.GetRecords<ClaryUser>();
-                    var result = records.Where(user => user.UserName == username);
-
-                    if (result.Count() > 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-
-            return false;
+            return reply.IsSuccess
+                ? Result.FromSuccess()
+                : Result.FromError(reply);
         }
     }
 }
