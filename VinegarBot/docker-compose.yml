@@ -4,6 +4,7 @@ services:
   vinegarbot.discordbot:
     image: ${DOCKER_REGISTRY-}vinegarbotdiscordbot
     build:
+      context: .
       dockerfile: VinegarBot.DiscordBot/Dockerfile
     depends_on:
         - seq
