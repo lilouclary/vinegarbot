@@ -4,6 +4,7 @@ using Remora.Discord.API.Objects;
 using Remora.Discord.Gateway.Responders;
 using Remora.Results;
 using System.Drawing;
+using VinegarBot.DiscordBot.Config;
 using VinegarBot.DiscordBot.Services;
 
 namespace VinegarBot.DiscordBot.Responders
@@ -12,12 +13,14 @@ namespace VinegarBot.DiscordBot.Responders
     {
         private readonly IUserLevelService _userLevelService;
         private readonly IDiscordRestChannelAPI _channelAPI;
-        private readonly List<int> levelMilestones = new() { 3, 10, 15, 20 };
+        private readonly ILogger<UserLevelResponder> _logger;
 
-        public UserLevelResponder(IDiscordRestChannelAPI channelAPI, IUserLevelService userLevelService) 
+        public UserLevelResponder(IDiscordRestChannelAPI channelAPI, IUserLevelService userLevelService, ILogger<UserLevelResponder> logger) 
         {
             _channelAPI = channelAPI;
             _userLevelService = userLevelService;
+            _logger = logger;
+
         }
         public async Task<Result> RespondAsync(IMessageCreate gatewayEvent, CancellationToken ct = default)
         {
@@ -31,11 +34,14 @@ namespace VinegarBot.DiscordBot.Responders
             _userLevelService.ModifyUserPoints(gatewayEvent.Author, _userLevelService.DeterminePostXP());
             int userLevel = _userLevelService.CheckUserLevelUp(gatewayEvent.Author);
 
-            if (levelMilestones.Contains(userLevel))
+            if (LevelXPDictionary.roleMilestones.ContainsValue(userLevel))
             {
+                // TO DO: update their role
                 var embed = new Embed(
                     Description: $"Congratulations {gatewayEvent.Author.Username}, you have leveled up to level {userLevel}! Please check the pinned post for your new rewards!", 
                     Colour: Color.PeachPuff);
+
+                _logger.LogInformation($"{gatewayEvent.Author.Username} leveled up to {userLevel}.");
 
                 return (Result) await _channelAPI.CreateMessageAsync
                 (

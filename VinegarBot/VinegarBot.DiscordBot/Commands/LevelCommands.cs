@@ -1,6 +1,5 @@
 ﻿using Remora.Commands.Attributes;
 using Remora.Commands.Groups;
-using Remora.Discord.API.Abstractions.Gateway.Events;
 using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Objects;
 using Remora.Discord.Commands.Attributes;
@@ -9,6 +8,7 @@ using Remora.Results;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using VinegarBot.DiscordBot.Config;
 using VinegarBot.DiscordBot.Models;
 using VinegarBot.DiscordBot.Services;
 
@@ -19,7 +19,6 @@ namespace VinegarBot.DiscordBot.Commands
         private readonly ILogger<UserCommands> logger;
         private readonly FeedbackService feedbackService;
         private readonly IUserLevelService userLevelService;
-        private readonly List<int> levelMilestones = new() { 3, 10, 15, 20 };
 
         public LevelCommands(ILogger<UserCommands> logger, FeedbackService feedbackService, IUserLevelService userLevelService)
         {
@@ -72,8 +71,9 @@ namespace VinegarBot.DiscordBot.Commands
 
             int userLevel = userLevelService.CheckUserLevelUp(user);
 
-            if (levelMilestones.Contains(userLevel))
+            if (LevelXPDictionary.roleMilestones.ContainsValue(userLevel))
             {
+                // update their role
                 replyText = $"Added {points} points to {user.Username}. Congratulations, you have leveled up to level {userLevel}! Please check the pinned post for your new rewards!";
             }
 
@@ -98,8 +98,6 @@ namespace VinegarBot.DiscordBot.Commands
                 fields.Add(new EmbedField("", $"{ranking}. {user.UserName}  {user.UserPoints}xp  lvl{user.UserLevel}"));
                 ranking++;
             }
-
-            //var pages = PaginatedEmbedFactory.SimpleFieldsFromCollection(users, user => user.UserName, user => user.UserPoints.ToString());
 
             var reply = await feedbackService.SendContextualEmbedAsync(new Embed(
                 Title: "Clary Reward's Program Leaderboard",
