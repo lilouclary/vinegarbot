@@ -1,5 +1,6 @@
 ﻿using Remora.Commands.Attributes;
 using Remora.Commands.Groups;
+using Remora.Discord.API.Abstractions.Gateway.Events;
 using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Objects;
 using Remora.Discord.Commands.Attributes;
@@ -13,13 +14,13 @@ namespace VinegarBot.DiscordBot.Commands
 {
     public class UserCommands : CommandGroup
     {
-        private readonly ILogger<UserCommands> logger;
-        private readonly FeedbackService feedbackService;
+        private readonly ILogger<UserCommands> _logger;
+        private readonly FeedbackService _feedbackService;
 
         public UserCommands(ILogger<UserCommands> logger, FeedbackService feedbackService)
         {
-            this.logger = logger;
-            this.feedbackService = feedbackService;
+            _logger = logger;
+            _feedbackService = feedbackService;
         }
 
         [Command("ping")]
@@ -27,11 +28,13 @@ namespace VinegarBot.DiscordBot.Commands
         [Description("Testing ping.")]
         public async Task<IResult> PingAsync()
         {
-            var reply = await feedbackService.SendContextualEmbedAsync(new Embed(
+            var reply = await _feedbackService.SendContextualEmbedAsync(new Embed(
                 Title: "Test", 
                 Description: "Pong!", 
                 Colour: Color.PeachPuff),
-                ct: CancellationToken);
+            ct: CancellationToken);
+
+            _logger.LogInformation($"Bot pinged successfully.");
 
             return reply.IsSuccess
                 ? Result.FromSuccess()

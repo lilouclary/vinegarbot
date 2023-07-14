@@ -3,47 +3,19 @@ using CsvHelper;
 using System.Globalization;
 using VinegarBot.DiscordBot.Models;
 using Remora.Discord.API.Abstractions.Objects;
-using Remora.Discord.API.Abstractions.Gateway.Events;
-using Remora.Discord.API.Objects;
+using VinegarBot.DiscordBot.Config;
 
 namespace VinegarBot.DiscordBot.Services
 {
     public class UserLevelService : IUserLevelService
     {
-        private readonly Dictionary<int, int> levelLegend = new Dictionary<int, int>()
+        ILogger<UserLevelService> _logger;
+
+        public UserLevelService(ILogger<UserLevelService> logger)
         {
-            {0, 0},
-            {1, 100},
-            {2, 255},
-            {3, 475},
-            {4, 770},
-            {5, 1150},
-            {6, 1625},
-            {7, 2205},
-            {8, 2900},
-            {9, 3720},
-            {10, 4675},
-            {11, 5775},
-            {12, 7030},
-            {13, 8450},
-            {14, 10045},
-            {15, 11825},
-            {16, 13800},
-            {17, 15980},
-            {18, 18375},
-            {19, 20995},
-            {20, 23850},
-            {21, 26950},
-            {22, 30305},
-            {23, 33925},
-            {24, 37820},
-            {25, 42000},
-            {26, 46475},
-            {27, 51255},
-            {28, 56350},
-            {29, 61770},
-            {30, 67525}
-        };
+            _logger = logger;
+        }
+
         public ClaryUser GetUser(IUser _user)
         {
             ClaryUser claryUser = null;
@@ -61,7 +33,6 @@ namespace VinegarBot.DiscordBot.Services
                     using (var csv = new CsvReader(reader, config))
                     {
                         var records = csv.GetRecords<ClaryUser>();
-                        // var result = records.Where(user => user.UserName == username);
                         claryUser = records.Where(user => user.UserName == _user.Username).FirstOrDefault();
                     }
                 }
@@ -72,7 +43,7 @@ namespace VinegarBot.DiscordBot.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message, ex);
             }
 
 
@@ -100,7 +71,7 @@ namespace VinegarBot.DiscordBot.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message, ex);
             }
 
             return newUser;
@@ -120,19 +91,12 @@ namespace VinegarBot.DiscordBot.Services
                     var records = csv.GetRecords<ClaryUser>();
                     var result = records.Where(user => user.UserName == _user.Username);
 
-                    if (result.Count() > 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    return result.Any();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message, ex); 
             }
 
             return false;
@@ -157,7 +121,7 @@ namespace VinegarBot.DiscordBot.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message, ex);
             }
 
             return users;
@@ -172,32 +136,39 @@ namespace VinegarBot.DiscordBot.Services
                 AddUser(_user);
             }
 
-            // read file into enumerable and update points for user
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            try
             {
-                HasHeaderRecord = false,
-            };
-            using (var reader = new StreamReader("UserInfo.csv"))
-            using (var csv = new CsvReader(reader, config))
-            {
-                List<ClaryUser> records = csv.GetRecords<ClaryUser>().ToList();
-
-                foreach (var record in records)
+                // read file into enumerable and update points for user
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    if (record.UserName == _user.Username)
+                    HasHeaderRecord = false,
+                };
+                using (var reader = new StreamReader("UserInfo.csv"))
+                using (var csv = new CsvReader(reader, config))
+                {
+                    List<ClaryUser> records = csv.GetRecords<ClaryUser>().ToList();
+
+                    foreach (var record in records)
                     {
-                        record.UserPoints += points;
+                        if (record.UserName == _user.Username)
+                        {
+                            record.UserPoints += points;
+                        }
                     }
+
+                    users = records;
                 }
 
-                users = records;
+                // overwrite the old file with the new data
+                using (var writer = new StreamWriter("UserInfo.csv", false))
+                using (var csv = new CsvWriter(writer, config))
+                {
+                    csv.WriteRecords(users);
+                }
             }
-
-            // overwrite the old file with the new data
-            using (var writer = new StreamWriter("UserInfo.csv", false))
-            using (var csv = new CsvWriter(writer, config))
+            catch (Exception ex)
             {
-                csv.WriteRecords(users);
+                _logger.LogError(ex.Message, ex);
             }
         }
 
@@ -262,14 +233,14 @@ namespace VinegarBot.DiscordBot.Services
 
             try
             {
-                if (user.UserPoints > levelLegend[user.UserLevel])
+                if (user.UserPoints > LevelXPDictionary.levelLegend[user.UserLevel])
                 {
-                    foreach(KeyValuePair<int, int> entry in levelLegend)
+                    foreach(KeyValuePair<int, int> entry in LevelXPDictionary.levelLegend)
                     {
                         var x = entry.Key;
                         var y = entry.Value;
 
-                        if(user.UserPoints < levelLegend[entry.Key])
+                        if(user.UserPoints < LevelXPDictionary.levelLegend[entry.Key])
                         {
                             currentLevel = entry.Key - 1;
                             break;
@@ -313,7 +284,7 @@ namespace VinegarBot.DiscordBot.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError(ex.Message, ex);
                 return 0;
             }
         }
