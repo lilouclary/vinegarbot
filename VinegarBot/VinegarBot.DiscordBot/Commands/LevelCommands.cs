@@ -93,7 +93,8 @@ namespace VinegarBot.DiscordBot.Commands
             var fields = new List<EmbedField>();
             int ranking = 1;
 
-            users.OrderByDescending(x => x.UserPoints);
+            users = users.OrderByDescending(x => x.UserPoints).ToList();
+
 
             foreach (var user in users)
             {
