@@ -16,9 +16,10 @@ var configuration = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
 
-var settings = configuration
-    .GetSection(nameof(DiscordSettings))
-    .Get<DiscordSettings>();
+var _botToken = configuration.GetValue<string>("BotToken");
+
+var settings = new DiscordSettings() { BotToken = _botToken};
+
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Seq(
