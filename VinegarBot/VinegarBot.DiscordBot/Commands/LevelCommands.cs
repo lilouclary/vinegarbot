@@ -93,6 +93,8 @@ namespace VinegarBot.DiscordBot.Commands
             var fields = new List<EmbedField>();
             int ranking = 1;
 
+            users.OrderByDescending(x => x.UserPoints);
+
             foreach (var user in users)
             {
                 fields.Add(new EmbedField("", $"{ranking}. {user.UserName}  {user.UserPoints}xp  lvl{user.UserLevel}"));
