@@ -225,6 +225,8 @@ namespace VinegarBot.DiscordBot.Services
             }
         }
 
+        // Return 0 if level up has not occured
+        // Return actual level if level has changed
         public int CheckUserLevelUp(IUser _user)
         {
             ClaryUser user = GetUser(_user);
@@ -233,7 +235,7 @@ namespace VinegarBot.DiscordBot.Services
 
             try
             {
-                if (user.UserPoints > LevelXPDictionary.levelLegend[user.UserLevel])
+                if (user.UserPoints > LevelXPDictionary.levelLegend[user.UserLevel + 1])
                 {
                     foreach(KeyValuePair<int, int> entry in LevelXPDictionary.levelLegend)
                     {
